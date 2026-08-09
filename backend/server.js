@@ -27,12 +27,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // CORS configuration (allow requests from frontend dev server)
-app.use(
-  cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-    credentials: true,
-  })
-);
+
+app.use(cors({
+  origin: "https://plans-and-stripe-management-system.vercel.app",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 // Define Routes
 app.use('/api/auth', require('./routes/authRoutes'));
