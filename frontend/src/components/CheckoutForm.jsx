@@ -117,7 +117,7 @@ export const CheckoutForm = ({ clientSecret, plan, billingPeriod, onSuccess }) =
             Processing Payment...
           </span>
         ) : (
-          `Pay ${billingPeriod === 'monthly' ? `$${plan.monthlyPrice}` : `$${plan.yearlyPrice}`} INR`
+          `Pay ₹${((billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice) * 80).toFixed(2)} INR`
         )}
       </button>
     </form>
