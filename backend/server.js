@@ -19,11 +19,29 @@ app.post(
   require('./controllers/paymentController').handleWebhook
 );
 
+const allowedOrigins = [
+  'https://plans-and-stripe-management-system.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173'
+];
+
 app.use(cors({
-  origin: "https://plans-and-stripe-management-system.vercel.app",
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      /https:\/\/.*\.vercel\.app$/.test(origin);
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 }));
 
 // Body parser middleware
