@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://plans-and-stripe-management-system.onrender.com',
+  baseURL: 'https://plans-and-stripe-management-system.onrender.com/api',
   withCredentials: true, // Crucial for HTTP-only cookies
 });
 
