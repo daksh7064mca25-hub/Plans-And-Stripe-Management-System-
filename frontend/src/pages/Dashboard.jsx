@@ -32,7 +32,7 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-4xl mx-auto">
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-indigo-900 to-slate-900 border border-slate-800 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-lg">
@@ -52,7 +52,7 @@ const Dashboard = () => {
         </div>
 
         {/* Profile Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-md">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
             <User className="h-5 w-5 text-indigo-400" />
             <span>Profile Account Information</span>
@@ -108,7 +108,7 @@ const Dashboard = () => {
         </div>
 
         {/* Premium Portal Panel */}
-        <div className="mt-8 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+        <div className="mt-8 bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-md relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-y-[-10px] translate-x-[10px] text-yellow-500/5 pointer-events-none">
             <Crown className="h-48 w-48" />
           </div>
@@ -123,7 +123,7 @@ const Dashboard = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-500"></div>
             </div>
           ) : premiumData ? (
-            <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/25 border border-yellow-500/20 rounded-2xl p-6 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/25 border border-yellow-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
               <div className="flex items-center space-x-3 text-yellow-400 font-bold mb-4">
                 <Sparkles className="h-5 w-5 animate-pulse" />
                 <span className="text-sm tracking-wider uppercase">Subscription Premium Active</span>
@@ -149,7 +149,7 @@ const Dashboard = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-slate-950/50 border border-slate-800/85 rounded-2xl p-6 text-center">
+            <div className="bg-slate-950/50 border border-slate-800/85 rounded-2xl p-4 sm:p-6 text-center">
               <div className="bg-slate-900 p-4 rounded-full w-14 h-14 flex items-center justify-center mx-auto mb-4 border border-slate-800 text-slate-400">
                 <Lock className="h-6 w-6" />
               </div>

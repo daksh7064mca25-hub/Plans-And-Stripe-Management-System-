@@ -61,7 +61,7 @@ const PaymentsList = () => {
   };
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-white flex items-center space-x-3">
@@ -96,7 +96,7 @@ const PaymentsList = () => {
           </form>
 
           {/* Filters */}
-          <div className="flex w-full md:w-auto items-center space-x-3 justify-end">
+          <div className="flex w-full md:w-auto items-center gap-3 justify-between sm:justify-end">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">
               Filter Status:
             </span>
@@ -133,84 +133,167 @@ const PaymentsList = () => {
             No payments found matching the selected filters.
           </div>
         ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg mb-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-850 border-b border-slate-800 text-slate-300 text-xs font-semibold uppercase tracking-wider">
-                    {user?.role === 'Admin' && <th className="py-4 px-6">User</th>}
-                    <th className="py-4 px-6">Plan Name</th>
-                    <th className="py-4 px-6">Billing Cycle</th>
-                    <th className="py-4 px-6">Amount</th>
-                    <th className="py-4 px-6">Payment Date</th>
-                    <th className="py-4 px-6">Stripe ID</th>
-                    <th className="py-4 px-6 text-right">Status</th>
-                    <th className="py-4 px-6 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-sm">
-                  {payments.map((item) => (
-                    <tr key={item._id} className="hover:bg-slate-850/20 transition-colors">
-                      {user?.role === 'Admin' && (
-                        <td className="py-4 px-6">
-                          <p className="font-semibold text-white">{item.userId?.name || 'Deleted User'}</p>
-                          <p className="text-xs text-slate-500">{item.userId?.email || 'N/A'}</p>
+          <div className="space-y-4 mb-6">
+            {/* Desktop View */}
+            <div className="hidden lg:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-850 border-b border-slate-800 text-slate-300 text-xs font-semibold uppercase tracking-wider">
+                      {user?.role === 'Admin' && <th className="py-4 px-6">User</th>}
+                      <th className="py-4 px-6">Plan Name</th>
+                      <th className="py-4 px-6">Billing Cycle</th>
+                      <th className="py-4 px-6">Amount</th>
+                      <th className="py-4 px-6">Payment Date</th>
+                      <th className="py-4 px-6">Stripe ID</th>
+                      <th className="py-4 px-6 text-right">Status</th>
+                      <th className="py-4 px-6 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-sm">
+                    {payments.map((item) => (
+                      <tr key={item._id} className="hover:bg-slate-850/20 transition-colors">
+                        {user?.role === 'Admin' && (
+                          <td className="py-4 px-6">
+                            <p className="font-semibold text-white">{item.userId?.name || 'Deleted User'}</p>
+                            <p className="text-xs text-slate-500">{item.userId?.email || 'N/A'}</p>
+                          </td>
+                        )}
+                        <td className="py-4 px-6 font-semibold text-white flex items-center space-x-1.5">
+                          <Layers className="h-4 w-4 text-indigo-400 flex-shrink-0" />
+                          <span>{item.planId?.name || 'Deleted Plan'}</span>
                         </td>
-                      )}
-                      <td className="py-4 px-6 font-semibold text-white flex items-center space-x-1.5 mt-2.5">
-                        <Layers className="h-4 w-4 text-indigo-400 flex-shrink-0" />
-                        <span>{item.planId?.name || 'Deleted Plan'}</span>
-                      </td>
-                      <td className="py-4 px-6 capitalize text-slate-350">{item.billingPeriod}</td>
-                      <td className="py-4 px-6 font-mono font-bold text-white">₹{item.amount.toFixed(2)} INR</td>
-                      <td className="py-4 px-6 text-slate-400">
-                        {new Date(item.paymentDate).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </td>
-                      <td className="py-4 px-6 font-mono text-xs text-slate-500" title={item.stripePaymentIntentId}>
-                        {item.stripePaymentIntentId.startsWith('sim_')
-                          ? item.stripePaymentIntentId.substring(0, 15) + '...'
-                          : item.stripePaymentIntentId}
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex flex-col items-end space-y-1">
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${
-                              item.status === 'Succeeded'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
-                                : 'bg-red-500/10 text-red-400 border-red-500/25'
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                          {item.refundStatus && item.refundStatus !== 'None' && (
+                        <td className="py-4 px-6 capitalize text-slate-350">{item.billingPeriod}</td>
+                        <td className="py-4 px-6 font-mono font-bold text-white">₹{item.amount.toFixed(2)} INR</td>
+                        <td className="py-4 px-6 text-slate-400">
+                          {new Date(item.paymentDate).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </td>
+                        <td className="py-4 px-6 font-mono text-xs text-slate-500" title={item.stripePaymentIntentId}>
+                          {item.stripePaymentIntentId.startsWith('sim_')
+                            ? item.stripePaymentIntentId.substring(0, 15) + '...'
+                            : item.stripePaymentIntentId}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <div className="flex flex-col items-end space-y-1">
                             <span
-                              className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                item.refundStatus === 'Full'
-                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/25'
-                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                              className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${
+                                item.status === 'Succeeded'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                                  : 'bg-red-500/10 text-red-400 border-red-500/25'
                               }`}
                             >
-                              {item.refundStatus === 'Full' ? 'Fully Refunded' : 'Partially Refunded'}
+                               {item.status}
                             </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <Link
-                          to={`/billing/${item._id}`}
-                          className="inline-flex px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                            {item.refundStatus && item.refundStatus !== 'None' && (
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                  item.refundStatus === 'Full'
+                                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                                }`}
+                              >
+                                {item.refundStatus === 'Full' ? 'Fully Refunded' : 'Partially Refunded'}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <Link
+                            to={`/billing/${item._id}`}
+                            className="inline-flex px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile/Tablet Stacked View */}
+            <div className="block lg:hidden space-y-4">
+              {payments.map((item) => (
+                <div key={item._id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-md">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <Layers className="h-4.5 w-4.5 text-indigo-400 flex-shrink-0" />
+                        <h3 className="font-semibold text-white text-base leading-tight">{item.planId?.name || 'Deleted Plan'}</h3>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1 capitalize">{item.billingPeriod} Billing Cycle</p>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-1">
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${
+                          item.status === 'Succeeded'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                            : 'bg-red-500/10 text-red-400 border-red-500/25'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                      {item.refundStatus && item.refundStatus !== 'None' && (
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            item.refundStatus === 'Full'
+                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                          }`}
                         >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          {item.refundStatus === 'Full' ? 'Fully Refunded' : 'Partially Refunded'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {user?.role === 'Admin' && (
+                    <div className="border-t border-slate-850 pt-3">
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold">User</p>
+                      <p className="text-sm font-semibold text-white mt-0.5">{item.userId?.name || 'Deleted User'}</p>
+                      <p className="text-xs text-slate-400">{item.userId?.email || 'N/A'}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-slate-850 pt-3 text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold">Amount</p>
+                      <p className="font-mono font-bold text-white mt-0.5">₹{item.amount.toFixed(2)} INR</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-semibold">Payment Date</p>
+                      <p className="text-slate-305 mt-0.5">
+                        {new Date(item.paymentDate).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-850 pt-3 flex justify-between items-center text-xs">
+                    <div className="truncate max-w-[170px] sm:max-w-xs">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">Stripe ID</span>
+                      <span className="font-mono text-slate-455 text-xxs truncate block" title={item.stripePaymentIntentId}>
+                        {item.stripePaymentIntentId}
+                      </span>
+                    </div>
+                    <Link
+                      to={`/billing/${item._id}`}
+                      className="inline-flex px-4 py-2 bg-slate-850 hover:bg-slate-800 text-indigo-400 hover:text-indigo-305 border border-slate-700 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

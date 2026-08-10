@@ -26,7 +26,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-73px)] bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-73px)] bg-slate-955 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Background glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 blur-3xl opacity-15 w-[400px] h-[400px] rounded-full bg-indigo-500 pointer-events-none"></div>
 

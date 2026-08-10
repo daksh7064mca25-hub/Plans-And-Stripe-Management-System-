@@ -72,7 +72,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -215,51 +215,101 @@ const Profile = () => {
               No transactions recorded for this account.
             </div>
           ) : (
-            <div className="overflow-x-auto border border-slate-850 rounded-2xl">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-850 border-b border-slate-800 text-slate-355 text-xxs font-semibold uppercase tracking-wider">
-                    <th className="py-3.5 px-5">Plan</th>
-                    <th className="py-3.5 px-5">Billing Cycle</th>
-                    <th className="py-3.5 px-5">Amount</th>
-                    <th className="py-3.5 px-5">Transaction Date</th>
-                    <th className="py-3.5 px-5">Stripe Transaction ID</th>
-                    <th className="py-3.5 px-5 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 text-xs">
-                  {payments.map((tx) => (
-                    <tr key={tx._id} className="hover:bg-slate-850/10 transition-colors">
-                      <td className="py-3.5 px-5 font-semibold text-white">{tx.planId?.name || 'Deleted Plan'}</td>
-                      <td className="py-3.5 px-5 capitalize text-slate-400">{tx.billingPeriod}</td>
-                      <td className="py-3.5 px-5 font-mono font-bold text-white">₹{tx.amount.toFixed(2)}</td>
-                      <td className="py-3.5 px-5 text-slate-455">
-                        {new Date(tx.paymentDate).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </td>
-                      <td className="py-3.5 px-5 font-mono text-slate-500" title={tx.stripePaymentIntentId}>
-                        {tx.stripePaymentIntentId.startsWith('sim_')
-                          ? tx.stripePaymentIntentId.substring(0, 15) + '...'
-                          : tx.stripePaymentIntentId}
-                      </td>
-                      <td className="py-3.5 px-5 text-right">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-xxs font-semibold ${
-                            tx.status === 'Succeeded'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          }`}
-                        >
-                          {tx.status}
-                        </span>
-                      </td>
+            <div className="space-y-4">
+              {/* Desktop View */}
+              <div className="hidden lg:block overflow-x-auto border border-slate-850 rounded-2xl">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-850 border-b border-slate-800 text-slate-355 text-xxs font-semibold uppercase tracking-wider">
+                      <th className="py-3.5 px-5">Plan</th>
+                      <th className="py-3.5 px-5">Billing Cycle</th>
+                      <th className="py-3.5 px-5">Amount</th>
+                      <th className="py-3.5 px-5">Transaction Date</th>
+                      <th className="py-3.5 px-5">Stripe Transaction ID</th>
+                      <th className="py-3.5 px-5 text-right">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-xs">
+                    {payments.map((tx) => (
+                      <tr key={tx._id} className="hover:bg-slate-850/10 transition-colors">
+                        <td className="py-3.5 px-5 font-semibold text-white">{tx.planId?.name || 'Deleted Plan'}</td>
+                        <td className="py-3.5 px-5 capitalize text-slate-400">{tx.billingPeriod}</td>
+                        <td className="py-3.5 px-5 font-mono font-bold text-white">₹{tx.amount.toFixed(2)}</td>
+                        <td className="py-3.5 px-5 text-slate-455">
+                          {new Date(tx.paymentDate).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </td>
+                        <td className="py-3.5 px-5 font-mono text-slate-500" title={tx.stripePaymentIntentId}>
+                          {tx.stripePaymentIntentId.startsWith('sim_')
+                            ? tx.stripePaymentIntentId.substring(0, 15) + '...'
+                            : tx.stripePaymentIntentId}
+                        </td>
+                        <td className="py-3.5 px-5 text-right">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-xxs font-semibold ${
+                              tx.status === 'Succeeded'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            }`}
+                          >
+                            {tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile View */}
+              <div className="block lg:hidden space-y-4">
+                {payments.map((tx) => (
+                  <div key={tx._id} className="bg-slate-950/40 border border-slate-850 rounded-2xl p-5 space-y-4 shadow-md">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-white text-base leading-tight">{tx.planId?.name || 'Deleted Plan'}</h3>
+                        <p className="text-xs text-slate-400 mt-1 capitalize">{tx.billingPeriod} Cycle</p>
+                      </div>
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded text-xxs font-semibold ${
+                          tx.status === 'Succeeded'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        }`}
+                      >
+                        {tx.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-850/60 pt-3 text-xs">
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Amount</p>
+                        <p className="font-mono font-bold text-white mt-1">₹{tx.amount.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase font-semibold">Date</p>
+                        <p className="text-slate-300 mt-1">
+                          {new Date(tx.paymentDate).toLocaleDateString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-850/60 pt-3">
+                      <p className="text-[10px] text-slate-505 uppercase font-semibold">Stripe Transaction ID</p>
+                      <p className="font-mono text-slate-400 text-xxs mt-1 truncate" title={tx.stripePaymentIntentId}>
+                        {tx.stripePaymentIntentId}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

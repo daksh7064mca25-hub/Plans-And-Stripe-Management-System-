@@ -101,10 +101,10 @@ const RevenueDashboard = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-73px)] bg-slate-950 text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-73px)] bg-slate-955 text-white py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Wallet & Revenue Sharing</h1>
             <p className="text-sm text-slate-400 mt-1">Track your wallet balance, splits distributions, and transaction records.</p>
@@ -112,7 +112,7 @@ const RevenueDashboard = () => {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center space-x-2 px-4 py-2 border border-slate-800 bg-slate-900/50 hover:bg-slate-900 text-slate-300 hover:text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+            className="flex items-center space-x-2 px-4 py-2 border border-slate-800 bg-slate-900/50 hover:bg-slate-900 text-slate-300 hover:text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer w-fit"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -194,72 +194,129 @@ const RevenueDashboard = () => {
                   <p className="text-sm mt-1 text-slate-500">Distributions appear here automatically when payments succeed.</p>
                 </div>
               ) : (
-                <table className="min-w-full divide-y divide-slate-800">
-                  <thead className="bg-slate-950">
-                    <tr>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Date & Time
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Transaction ID
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Split Mode
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Total Revenue
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Your Share
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 bg-slate-900/50">
+                <div className="space-y-4">
+                  {/* Desktop View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-800">
+                      <thead className="bg-slate-955">
+                        <tr>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Date & Time
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Transaction ID
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Split Mode
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Total Revenue
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Your Share
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800 bg-slate-900/50">
+                        {history.map((row) => (
+                          <tr key={row._id} className="hover:bg-slate-850/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                              {new Date(row.createdAt).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-400">
+                              <div className="flex items-center space-x-2">
+                                <span className="truncate max-w-[150px]">{row.stripePaymentIntentId}</span>
+                                <button
+                                  onClick={() => copyToClipboard(row.stripePaymentIntentId)}
+                                  className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-all cursor-pointer"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                                  row.mode === 'Equal' ? 'text-blue-400 bg-blue-500/10' : 'text-purple-400 bg-purple-500/10'
+                                }`}
+                              >
+                                {row.mode} Split
+                              </span>
+                            </td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
+                              row.amount < 0 ? 'text-rose-400' : 'text-slate-300'
+                            }`}>
+                              {row.amount < 0 ? '-' : ''}₹{Math.abs(row.amount).toFixed(2)}
+                            </td>
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
+                              row.yourShare < 0 ? 'text-rose-400' : 'text-emerald-400'
+                            }`}>
+                              {row.yourShare < 0 ? '-' : '+'}₹{Math.abs(row.yourShare).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile stacked card view */}
+                  <div className="block lg:hidden divide-y divide-slate-850">
                     {history.map((row) => (
-                      <tr key={row._id} className="hover:bg-slate-850/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                          {new Date(row.createdAt).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-400">
-                          <div className="flex items-center space-x-2">
-                            <span className="truncate max-w-[150px]">{row.stripePaymentIntentId}</span>
-                            <button
-                              onClick={() => copyToClipboard(row.stripePaymentIntentId)}
-                              className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-all cursor-pointer"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </button>
+                      <div key={row._id} className="p-4 sm:p-6 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs text-slate-405">
+                              {new Date(row.createdAt).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                            <div className="flex items-center space-x-1.5 mt-1.5 font-mono text-xxs text-slate-500">
+                              <span className="truncate max-w-[150px]">{row.stripePaymentIntentId}</span>
+                              <button
+                                onClick={() => copyToClipboard(row.stripePaymentIntentId)}
+                                className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-all cursor-pointer"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span
-                            className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                            className={`inline-flex px-2 py-0.5 rounded text-xxs font-medium ${
                               row.mode === 'Equal' ? 'text-blue-400 bg-blue-500/10' : 'text-purple-400 bg-purple-500/10'
                             }`}
                           >
                             {row.mode} Split
                           </span>
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
-                          row.amount < 0 ? 'text-rose-400' : 'text-slate-300'
-                        }`}>
-                          {row.amount < 0 ? '-' : ''}₹{Math.abs(row.amount).toFixed(2)}
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
-                          row.yourShare < 0 ? 'text-rose-400' : 'text-emerald-400'
-                        }`}>
-                          {row.yourShare < 0 ? '-' : '+'}₹{Math.abs(row.yourShare).toFixed(2)}
-                        </td>
-                      </tr>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 border-t border-slate-850/60 pt-3 text-xs">
+                          <div>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">Total Revenue</p>
+                            <p className={`font-semibold mt-0.5 ${row.amount < 0 ? 'text-rose-400' : 'text-slate-200'}`}>
+                              {row.amount < 0 ? '-' : ''}₹{Math.abs(row.amount).toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">Your Share</p>
+                            <p className={`font-bold mt-0.5 ${row.yourShare < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              {row.yourShare < 0 ? '-' : '+'}₹{Math.abs(row.yourShare).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -312,79 +369,140 @@ const RevenueDashboard = () => {
                   <p className="text-lg font-medium text-slate-400">No refunds recorded yet</p>
                   <p className="text-sm mt-1 text-slate-500">Issued refunds will appear here.</p>
                 </div>
-              ) : (
-                <table className="min-w-full divide-y divide-slate-800">
-                  <thead className="bg-slate-950">
-                    <tr>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Date & Time
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Stripe Refund ID
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Original Payment
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Refunded By
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Reason
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Refunded Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800 bg-slate-900/50">
+                            <div className="space-y-4">
+                  {/* Desktop View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-800">
+                      <thead className="bg-slate-950">
+                        <tr>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Date & Time
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Stripe Refund ID
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Original Payment
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Refunded By
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Reason
+                          </th>
+                          <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Refunded Amount
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800 bg-slate-900/50">
+                        {refunds.map((refund) => (
+                          <tr key={refund._id} className="hover:bg-slate-850/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                              {new Date(refund.createdAt).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-400">
+                              <div className="flex items-center space-x-2">
+                                <span className="truncate max-w-[150px]">{refund.stripeRefundId}</span>
+                                <button
+                                  onClick={() => copyToClipboard(refund.stripeRefundId)}
+                                  className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-all cursor-pointer"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-400">
+                              <Link
+                                to={`/billing/${refund.payment?._id}`}
+                                className="text-indigo-400 hover:text-indigo-300 underline font-semibold transition-colors"
+                              >
+                                {refund.payment?.stripePaymentIntentId ? (
+                                  <span>{refund.payment.stripePaymentIntentId.substring(0, 15)}...</span>
+                                ) : (
+                                  <span>View Payment</span>
+                                )}
+                              </Link>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-355">
+                              <p className="font-semibold text-white">{refund.refundedBy?.name || 'Owner'}</p>
+                              <p className="text-xxs text-slate-500">{refund.refundedBy?.email || 'N/A'}</p>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-405 max-w-[180px] truncate" title={refund.refundReason}>
+                              {refund.refundReason}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-rose-400 font-bold">
+                              -₹{refund.refundAmount.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile stacked card view */}
+                  <div className="block lg:hidden divide-y divide-slate-850">
                     {refunds.map((refund) => (
-                      <tr key={refund._id} className="hover:bg-slate-850/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                          {new Date(refund.createdAt).toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-400">
-                          <div className="flex items-center space-x-2">
-                            <span className="truncate max-w-[150px]">{refund.stripeRefundId}</span>
-                            <button
-                              onClick={() => copyToClipboard(refund.stripeRefundId)}
-                              className="p-1 text-slate-500 hover:text-slate-300 rounded hover:bg-slate-800 transition-all cursor-pointer"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </button>
+                      <div key={refund._id} className="p-4 sm:p-6 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs text-slate-400">
+                              {new Date(refund.createdAt).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                            <div className="flex items-center space-x-1.5 mt-1.5 font-mono text-xxs text-slate-500">
+                              <span className="truncate max-w-[150px]">{refund.stripeRefundId}</span>
+                              <button
+                                onClick={() => copyToClipboard(refund.stripeRefundId)}
+                                className="p-1 text-slate-505 hover:text-slate-300 rounded hover:bg-slate-800 transition-all cursor-pointer"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-400">
-                          <Link
-                            to={`/billing/${refund.payment?._id}`}
-                            className="text-indigo-400 hover:text-indigo-300 underline font-semibold transition-colors"
-                          >
-                            {refund.payment?.stripePaymentIntentId ? (
-                              <span>{refund.payment.stripePaymentIntentId.substring(0, 15)}...</span>
-                            ) : (
-                              <span>View Payment</span>
-                            )}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-350">
-                          <p className="font-semibold text-white">{refund.refundedBy?.name || 'Owner'}</p>
-                          <p className="text-xxs text-slate-500">{refund.refundedBy?.email || 'N/A'}</p>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 max-w-[180px] truncate" title={refund.refundReason}>
-                          {refund.refundReason}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-rose-400 font-bold">
-                          -₹{refund.refundAmount.toFixed(2)}
-                        </td>
-                      </tr>
+                          <p className="text-sm text-rose-455 font-bold font-mono">-₹{refund.refundAmount.toFixed(2)}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 border-t border-slate-850/60 pt-3 text-xs">
+                          <div>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">Original Payment</p>
+                            <Link
+                              to={`/billing/${refund.payment?._id}`}
+                              className="text-indigo-400 hover:text-indigo-305 underline font-semibold transition-colors mt-1 block truncate max-w-[120px]"
+                            >
+                              {refund.payment?.stripePaymentIntentId ? (
+                                <span>{refund.payment.stripePaymentIntentId.substring(0, 10)}...</span>
+                              ) : (
+                                <span>View</span>
+                              )}
+                            </Link>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-505 uppercase font-semibold">Refunded By</p>
+                            <p className="font-semibold text-white mt-1">{refund.refundedBy?.name || 'Owner'}</p>
+                          </div>
+                        </div>
+
+                        {refund.refundReason && (
+                          <div className="border-t border-slate-850/60 pt-3 text-xs">
+                            <p className="text-[10px] text-slate-505 uppercase font-semibold">Reason</p>
+                            <p className="text-slate-400 mt-1 italic">"{refund.refundReason}"</p>
+                          </div>
+                        )}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
               )}
             </div>
           </div>

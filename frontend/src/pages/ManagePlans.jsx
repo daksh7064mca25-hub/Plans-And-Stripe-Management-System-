@@ -114,7 +114,7 @@ const ManagePlans = () => {
   };
 
   return (
-    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
           <div>
@@ -232,7 +232,7 @@ const ManagePlans = () => {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <h2 className="text-xl font-bold text-white mb-4">
                 {editingPlan ? 'Edit Subscription Plan' : 'Create New Subscription Plan'}
               </h2>

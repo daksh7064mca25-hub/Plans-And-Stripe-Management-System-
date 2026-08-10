@@ -51,9 +51,9 @@ const AdminDashboard = () => {
   const gap = (chartWidth - barWidth * 7) / 6;
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-white flex items-center space-x-3">
               <TrendingUp className="h-8 w-8 text-indigo-500" />
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
           </div>
           <button
             onClick={fetchStats}
-            className="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer w-fit"
           >
             <RefreshCw className="h-4 w-4" />
             <span>Reload</span>

@@ -346,14 +346,14 @@ const RefundsManagement = () => {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-800/40 flex items-center space-x-4">
+          <div className="pt-2 border-t border-slate-800/40 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <span className="text-xs text-slate-400">Min Amount:</span>
             <input
               type="number"
               placeholder="Min amount (e.g. 500)"
               value={minAmount}
               onChange={(e) => setMinAmount(e.target.value)}
-              className="w-40 bg-slate-950 border border-slate-850 px-3 py-1.5 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-550"
+              className="w-40 bg-slate-955 border border-slate-850 px-3 py-1.5 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-550"
             />
           </div>
         </div>
@@ -366,56 +366,137 @@ const RefundsManagement = () => {
               No refund transactions found matching current filter values.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-800">
-                <thead className="bg-slate-900/80">
-                  <tr>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Date & Time
-                    </th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Stripe Refund ID
-                    </th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Customer
-                    </th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Refund Amount
-                    </th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-850 bg-slate-900/20">
-                  {filteredRefunds.map((refund) => (
-                    <tr key={refund._id} className="hover:bg-slate-850/40 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-350">
-                        {new Date(refund.createdAt).toLocaleDateString(undefined, {
-                          dateStyle: 'medium',
-                        })}{' '}
-                        <span className="text-slate-550 font-mono text-xs">
-                          {new Date(refund.createdAt).toLocaleTimeString(undefined, {
-                            timeStyle: 'short',
-                          })}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-mono">
-                        {refund.stripeRefundId}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                        <p className="font-semibold text-white">{refund.payment?.userId?.name || 'Unknown User'}</p>
-                        <p className="text-xs text-slate-500">{refund.payment?.userId?.email || 'N/A'}</p>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+            <div className="space-y-4">
+              {/* Desktop View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-800">
+                  <thead className="bg-slate-900/80">
+                    <tr>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Date & Time
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Stripe Refund ID
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Customer
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Refund Amount
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850 bg-slate-900/20">
+                    {filteredRefunds.map((refund) => (
+                      <tr key={refund._id} className="hover:bg-slate-850/40 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-350">
+                          {new Date(refund.createdAt).toLocaleDateString(undefined, {
+                            dateStyle: 'medium',
+                          })}{' '}
+                          <span className="text-slate-550 font-mono text-xs">
+                            {new Date(refund.createdAt).toLocaleTimeString(undefined, {
+                              timeStyle: 'short',
+                            })}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-mono">
+                          {refund.stripeRefundId}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          <p className="font-semibold text-white">{refund.payment?.userId?.name || 'Unknown User'}</p>
+                          <p className="text-xs text-slate-500">{refund.payment?.userId?.email || 'N/A'}</p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${
+                              refund.refundType === 'Full'
+                                ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'
+                                : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                            }`}
+                          >
+                            {refund.refundType}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-rose-450 font-bold">
+                          ₹{refund.refundAmount.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span
+                            className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                              refund.refundStatus === 'succeeded'
+                                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
+                                : 'bg-slate-800 text-slate-450 border border-slate-700'
+                            }`}
+                          >
+                            {refund.refundStatus}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                          <button
+                            onClick={() => setSelectedRefund(refund)}
+                            className="inline-flex items-center px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-xs font-bold text-slate-300 rounded-xl transition-all cursor-pointer border border-slate-800"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile stacked card view */}
+              <div className="block lg:hidden divide-y divide-slate-850">
+                {filteredRefunds.map((refund) => (
+                  <div key={refund._id} className="p-4 sm:p-6 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs text-slate-450">
+                          {new Date(refund.createdAt).toLocaleDateString(undefined, {
+                            dateStyle: 'medium',
+                          })}{' '}
+                          <span className="text-slate-550 font-mono text-xxs">
+                            {new Date(refund.createdAt).toLocaleTimeString(undefined, {
+                              timeStyle: 'short',
+                            })}
+                          </span>
+                        </p>
+                        <p className="font-mono text-xxs text-slate-500 mt-1 truncate max-w-[150px] sm:max-w-xs" title={refund.stripeRefundId}>
+                          ID: {refund.stripeRefundId}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          refund.refundStatus === 'succeeded'
+                            ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
+                            : 'bg-slate-800 text-slate-450 border border-slate-700'
+                        }`}
+                      >
+                        {refund.refundStatus}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-slate-850/60 pt-3">
+                      <p className="text-[10px] text-slate-550 uppercase font-semibold">Customer</p>
+                      <p className="text-sm font-semibold text-white mt-0.5">{refund.payment?.userId?.name || 'Unknown User'}</p>
+                      <p className="text-xs text-slate-400">{refund.payment?.userId?.email || 'N/A'}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-850/60 pt-3 text-xs">
+                      <div>
+                        <p className="text-[10px] text-slate-550 uppercase font-semibold">Refund Type</p>
                         <span
-                          className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${
+                          className={`inline-flex px-2 py-0.5 mt-1 rounded text-xxs font-semibold border ${
                             refund.refundType === 'Full'
                               ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'
                               : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
@@ -423,42 +504,33 @@ const RefundsManagement = () => {
                         >
                           {refund.refundType}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-rose-450 font-bold">
-                        ₹{refund.refundAmount.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                            refund.refundStatus === 'succeeded'
-                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
-                              : 'bg-slate-800 text-slate-450 border border-slate-700'
-                          }`}
-                        >
-                          {refund.refundStatus}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <button
-                          onClick={() => setSelectedRefund(refund)}
-                          className="inline-flex items-center px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-xs font-bold text-slate-300 rounded-xl transition-all cursor-pointer border border-slate-800"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1" />
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-550 uppercase font-semibold">Refunded Amount</p>
+                        <p className="text-base font-bold text-rose-400 mt-0.5">₹{refund.refundAmount.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-850/60 pt-3 flex justify-end">
+                      <button
+                        onClick={() => setSelectedRefund(refund)}
+                        className="inline-flex items-center justify-center px-4 py-2.5 bg-slate-950 hover:bg-slate-800 text-xs font-bold text-slate-300 rounded-xl transition-all cursor-pointer border border-slate-800 w-full sm:w-auto"
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1" />
+                        <span>View Details</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         {/* Refund Details Modal */}
         {selectedRefund && (
-          <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative space-y-6">
+          <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-955/80 backdrop-blur-sm">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative space-y-6">
               
               <button
                 onClick={() => setSelectedRefund(null)}
@@ -591,8 +663,8 @@ const RefundsManagement = () => {
 
         {/* Initiate Refund Modal */}
         {showInitiateModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative space-y-6">
+          <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-955/80 backdrop-blur-sm">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-4 sm:p-8 shadow-2xl relative space-y-6">
               
               <button
                 onClick={() => setShowInitiateModal(false)}

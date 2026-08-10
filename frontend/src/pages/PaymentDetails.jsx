@@ -146,7 +146,7 @@ const PaymentDetails = () => {
   const remainingRefundable = payment.amount - (payment.refundedAmount || 0);
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-5xl mx-auto">
         {/* Back Link */}
         <Link
@@ -218,7 +218,7 @@ const PaymentDetails = () => {
             )}
 
             {/* Overview Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-md">
               <h2 className="text-xl font-bold text-white mb-6">Payment Overview</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
@@ -252,7 +252,7 @@ const PaymentDetails = () => {
 
             {/* Revenue Distribution Card */}
             {distribution && (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-md">
                 <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
                   <Percent className="h-5 w-5 text-indigo-400" />
                   <span>Revenue Sharing Split Details</span>
@@ -299,7 +299,7 @@ const PaymentDetails = () => {
             )}
 
             {/* Metadata Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-md">
               <h2 className="text-xl font-bold text-white mb-6">Stripe & Customer Info</h2>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3.5">
@@ -339,7 +339,7 @@ const PaymentDetails = () => {
             </div>
 
             {/* Refund History Section */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-md">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-8 shadow-md">
               <h2 className="text-xl font-bold text-white mb-6">Refund Transaction History</h2>
               {refunds.length === 0 ? (
                 <div className="text-center py-6 text-slate-500 text-sm">
@@ -385,7 +385,7 @@ const PaymentDetails = () => {
           {/* Refund Panel (Owner only) */}
           <div className="lg:col-span-1">
             {user?.role === 'Owner' ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-md sticky top-24">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-md sticky top-24">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-rose-500" />
                   <span>Owner Actions</span>
@@ -513,7 +513,7 @@ const PaymentDetails = () => {
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
             <h4 className="text-lg font-bold text-white mb-2 flex items-center space-x-2">
               <AlertCircle className="h-5 w-5 text-rose-500" />
               <span>Confirm Refund Request</span>

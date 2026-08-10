@@ -48,9 +48,9 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-12 px-6">
+    <div className="bg-slate-955 text-slate-100 min-h-[calc(100vh-73px)] py-8 px-4 sm:py-12 sm:px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-white flex items-center space-x-3">
               <Users className="h-8 w-8 text-indigo-500" />
@@ -63,7 +63,7 @@ const AdminPanel = () => {
           <button
             onClick={fetchUsers}
             disabled={loading}
-            className="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-50 w-fit"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -79,56 +79,105 @@ const AdminPanel = () => {
             No registered users found.
           </div>
         ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-850 border-b border-slate-800 text-slate-300 text-xs font-semibold uppercase tracking-wider">
-                    <th className="py-4 px-6">User ID</th>
-                    <th className="py-4 px-6">Name</th>
-                    <th className="py-4 px-6">Email</th>
-                    <th className="py-4 px-6">Role</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-sm">
-                  {users.map((item) => (
-                    <tr key={item._id} className="hover:bg-slate-850/30 transition-colors">
-                      <td className="py-4 px-6 font-mono text-xs text-slate-500">{item._id}</td>
-                      <td className="py-4 px-6 font-semibold text-white">{item.name}</td>
-                      <td className="py-4 px-6 text-slate-300">{item.email}</td>
-                      <td className="py-4 px-6">
-                        <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
-                          item.role === 'Admin' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
-                        }`}>
-                          {item.role}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right space-x-2">
-                        {item._id !== currentUser._id ? (
-                          <>
-                            <button
-                              onClick={() => handleRoleToggle(item._id, item.role)}
-                              className="text-xs bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                            >
-                              Toggle Role
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(item._id)}
-                              className="inline-flex items-center text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 p-2 rounded-lg transition-colors cursor-pointer"
-                              title="Delete User"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-xs text-slate-500 italic">Active Self Session</span>
-                        )}
-                      </td>
+          <div className="space-y-4">
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-850 border-b border-slate-800 text-slate-300 text-xs font-semibold uppercase tracking-wider">
+                      <th className="py-4 px-6">User ID</th>
+                      <th className="py-4 px-6">Name</th>
+                      <th className="py-4 px-6">Email</th>
+                      <th className="py-4 px-6">Role</th>
+                      <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-sm">
+                    {users.map((item) => (
+                      <tr key={item._id} className="hover:bg-slate-850/30 transition-colors">
+                        <td className="py-4 px-6 font-mono text-xs text-slate-500">{item._id}</td>
+                        <td className="py-4 px-6 font-semibold text-white">{item.name}</td>
+                        <td className="py-4 px-6 text-slate-300">{item.email}</td>
+                        <td className="py-4 px-6">
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
+                            item.role === 'Admin' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
+                          }`}>
+                            {item.role}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right space-x-2">
+                          {item._id !== currentUser._id ? (
+                            <>
+                              <button
+                                onClick={() => handleRoleToggle(item._id, item.role)}
+                                className="text-xs bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                              >
+                                Toggle Role
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(item._id)}
+                                className="inline-flex items-center text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 p-2 rounded-lg transition-colors cursor-pointer"
+                                title="Delete User"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500 italic">Active Self Session</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Stacked Card View */}
+            <div className="block md:hidden space-y-4">
+              {users.map((item) => (
+                <div key={item._id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-md">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-white text-base leading-tight">{item.name}</h3>
+                      <p className="text-xs text-slate-400 mt-1">{item.email}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
+                      item.role === 'Admin' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-350'
+                    }`}>
+                      {item.role}
+                    </span>
+                  </div>
+                  
+                  <div className="border-t border-slate-800/60 pt-2.5 flex justify-between items-center text-xxs font-mono text-slate-500">
+                    <span>User ID</span>
+                    <span className="select-all">{item._id}</span>
+                  </div>
+
+                  <div className="border-t border-slate-800/60 pt-3 flex gap-2 justify-end">
+                    {item._id !== currentUser._id ? (
+                      <>
+                        <button
+                          onClick={() => handleRoleToggle(item._id, item.role)}
+                          className="text-xs bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-305 border border-indigo-500/20 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer flex-1 text-center font-medium"
+                        >
+                          Toggle Role
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(item._id)}
+                          className="inline-flex items-center justify-center text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-305 border border-red-500/20 p-2.5 rounded-xl transition-all cursor-pointer"
+                          title="Delete User"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-slate-500 italic py-1">Active Self Session</span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
