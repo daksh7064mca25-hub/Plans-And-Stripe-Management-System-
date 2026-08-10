@@ -369,7 +369,8 @@ const RevenueDashboard = () => {
                   <p className="text-lg font-medium text-slate-400">No refunds recorded yet</p>
                   <p className="text-sm mt-1 text-slate-500">Issued refunds will appear here.</p>
                 </div>
-                            <div className="space-y-4">
+              ) : (
+                <div className="space-y-4">
                   {/* Desktop View */}
                   <div className="hidden lg:block overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-800">
@@ -503,6 +504,7 @@ const RevenueDashboard = () => {
                       </div>
                     ))}
                   </div>
+                </div>
               )}
             </div>
           </div>
