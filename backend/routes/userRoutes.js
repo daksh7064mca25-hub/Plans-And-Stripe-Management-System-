@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUsers, deleteUser, updateUserRole, getProfile } = require('../controllers/userController');
+const { getUsers, deleteUser, updateUserRole, getProfile, triggerCronJobs } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 // Protect all routes here to require authentication
@@ -8,6 +8,7 @@ router.use(protect);
 
 // User Profile Actions
 router.get('/profile', getProfile);
+router.post('/cron/trigger', authorize('Admin'), triggerCronJobs);
 
 // Admin-only actions
 router.route('/')

@@ -1,6 +1,9 @@
 const userService = require('../services/userService');
 const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
+const expireSubscriptions = require('../cron/expireSubscriptions');
+const dailyAnalytics = require('../cron/dailyAnalytics');
+const sendExpiryReminders = require('../cron/sendExpiryReminders');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -42,9 +45,35 @@ const getProfile = asyncHandler(async (req, res, next) => {
   res.json(userProfile);
 });
 
+const triggerCronJobs = asyncHandler(async (req, res, next) => {
+  const { job } = req.body;
+  let result = {};
+
+  if (job === 'expire') {
+    result = await expireSubscriptions();
+  } else if (job === 'analytics') {
+    result = await dailyAnalytics();
+  } else if (job === 'reminders') {
+    result = await sendExpiryReminders();
+  } else {
+    // Run all
+    const expireRes = await expireSubscriptions();
+    const analyticsRes = await dailyAnalytics();
+    const remindersRes = await sendExpiryReminders();
+    result = { expire: expireRes, analytics: analyticsRes, reminders: remindersRes };
+  }
+
+  res.json({
+    success: true,
+    message: `Cron job(s) executed successfully`,
+    result,
+  });
+});
+
 module.exports = {
   getUsers,
   deleteUser,
   updateUserRole,
   getProfile,
+  triggerCronJobs,
 };

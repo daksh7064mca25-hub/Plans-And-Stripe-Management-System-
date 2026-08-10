@@ -8,6 +8,33 @@ const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user: currentUser } = useContext(AuthContext);
+  const [cronLoading, setCronLoading] = useState(false);
+
+  const handleTriggerCron = async (jobType) => {
+    try {
+      setCronLoading(true);
+      const payload = jobType === 'all' ? {} : { job: jobType };
+      const res = await api.post('/users/cron/trigger', payload);
+      
+      if (res.data.success) {
+        let detailsMsg = '';
+        if (jobType === 'expire') {
+          detailsMsg = ` (Expired: ${res.data.result?.expiredCount ?? 0} subscriptions)`;
+        } else if (jobType === 'analytics') {
+          detailsMsg = ` (Payments total: ₹${res.data.result?.totalSuccessfulPayments ?? 0})`;
+        } else if (jobType === 'reminders') {
+          detailsMsg = ` (Dispatched: ${res.data.result?.sentCount ?? 0} reminders)`;
+        } else {
+          detailsMsg = ` (All cron tasks finished)`;
+        }
+        toast.success(`${res.data.message}${detailsMsg}`);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to trigger cron task');
+    } finally {
+      setCronLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -68,6 +95,47 @@ const AdminPanel = () => {
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
+        </div>
+
+        {/* System Cron Scheduler Controls */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mb-8 shadow-xl">
+          <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-indigo-500" />
+            <span>System Cron Scheduler Controls</span>
+          </h2>
+          <p className="text-slate-455 text-xs mb-5">
+            Manually trigger background sync tasks. The results will propagate live to your Mongo database.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => handleTriggerCron('expire')}
+              disabled={cronLoading}
+              className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              <span>Expire Subscriptions</span>
+            </button>
+            <button
+              onClick={() => handleTriggerCron('analytics')}
+              disabled={cronLoading}
+              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              <span>Compile Daily Analytics</span>
+            </button>
+            <button
+              onClick={() => handleTriggerCron('reminders')}
+              disabled={cronLoading}
+              className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              <span>Send Expiry Reminders</span>
+            </button>
+            <button
+              onClick={() => handleTriggerCron('all')}
+              disabled={cronLoading}
+              className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              <span>Run All Jobs</span>
+            </button>
+          </div>
         </div>
 
         {loading ? (

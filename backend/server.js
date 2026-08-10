@@ -10,6 +10,10 @@ dotenv.config();
 // Connect to database
 connectDB();
 
+// Initialize background cron jobs
+const initCronJobs = require('./cron');
+initCronJobs();
+
 const app = express();
 
 // Stripe Webhook needs raw body parsed BEFORE express.json()

@@ -50,6 +50,23 @@ const userSchema = new mongoose.Schema(
         default: null,
       },
     },
+    subscriptionStatus: {
+      type: String,
+      enum: ['Active', 'Past Due', 'Inactive', 'Expired'],
+      default: 'Inactive',
+    },
+    isPremium: {
+      type: Boolean,
+      default: false,
+    },
+    expiresAt: {
+      type: Date,
+      default: null,
+    },
+    reminderSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
