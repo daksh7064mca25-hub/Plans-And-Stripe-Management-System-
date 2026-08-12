@@ -6,27 +6,28 @@ This document details the purpose of the SaaSFlow application, the E2E lifecycle
 
 ## 🎯 What is SaaSFlow Made For?
 
-**SaaSFlow** is a complete, production-ready SaaS billing, revenue-sharing, and refund auditing gateway built using the MERN stack. It solves three critical business operations:
+**SaaSFlow** is a complete, production-ready SaaS billing, revenue-sharing, and refund auditing gateway built using the MERN stack. It solves four critical business operations:
 
 1. **Dynamic Subscription Management**: Customers subscribe to tiered plans (monthly/yearly), converting dynamically between USD prices and local INR amounts.
-
 2. **Automated Revenue Distribution**: Whenever a customer pays, the system automatically splits that payment among the **Owner** and **Employees** in real-time according to settings stored in MongoDB (Equal Split or Percentage Split).
-
 3. **Audited Stripe Refunds**: Supports full or partial refunds directly integrated with Stripe. Refunds reverse wallet distributions proportionally, record historical transaction logs, and utilize MongoDB transactions to guarantee financial consistency.
+4. **Automated Maintenance Scheduler**: Periodically triggers automated subscription expiration checks, compiles daily financial analytics reports, and dispatches renewal warning notifications.
 
 ---
 
 ## 🔄 E2E System Flow
 
-Below is the workflow showing what happens when a subscription purchase or refund occurs:
+Below is the workflow showing what happens when a subscription purchase, refund, or background scheduling check occurs:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Customer as User / Customer
     actor Owner as Owner
+    actor Admin as Admin
     participant Frontend as React Client
     participant Express as Node/Express API
+    participant Cron as Cron Scheduler
     participant Stripe as Stripe Gateway
     participant DB as MongoDB
 
@@ -62,6 +63,14 @@ sequenceDiagram
     Express->>DB: Insert logs in RefundTransactionLog
     Express->>DB: Commit Transaction Session
     Express-->>Frontend: Return success status
+
+    Note over Cron, DB: 4. Background Scheduled Tasks (Cron)
+    Cron->>DB: expireSubscriptions (Daily at 00:00) -> Flag expired user subscriptions
+    Cron->>DB: dailyAnalytics (Daily at 00:10) -> Aggregate yesterday's payments & refunds
+    Cron->>DB: sendExpiryReminders (Daily at 09:00) -> Notify users expiring in <= 3 days via Nodemailer
+    Admin->>Frontend: Click trigger button in Dashboard
+    Frontend->>Express: POST /api/users/cron/trigger (Admin-protected manual run)
+    Express->>Cron: Run targeted task on database instantly
 ```
 
 ---
@@ -72,83 +81,63 @@ Here is an architectural map of what happens inside every backend and frontend f
 
 ### 1. Backend Codebase (`/backend`)
 
-#### Core Mounts
-- **[server.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/server.js)**: Initializes the Express application. Configures cookie parsing, body parsing, and CORS. Mounts the raw-body webhook listener *before* Express JSON middleware to preserve raw buffers for Stripe signature verification. Mounts api route modules and the global error handler.
+#### Core Setup & Boot
+- **[server.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/server.js)**: Initializes the Express application. Configures cookie parsing, body parsing, and CORS. Mounts raw-body webhook listener first to preserve Stripe signature buffers. Initializes the background cron task scheduler and mounts API routers.
 
 #### Database Configurations
-- **[config/db.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/config/db.js)**: Establishes the connection between Mongoose and MongoDB. Sets up default event logs for database connections.
+- **[config/db.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/config/db.js)**: Establishes the connection between Mongoose and MongoDB.
 
 #### Database Models (`/backend/models`)
-- **[models/User.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/User.js)**: Defines the User schema. Stores name, email, encrypted password, role (`User`, `Employee`, `Owner`, `Admin`), current wallet balance, and active subscription details. Includes pre-save hooks to hash passwords using bcrypt.
-- **[models/Plan.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/Plan.js)**: Defines the subscription plans schema. Stores plan name, description, monthly price, and yearly price in USD.
-- **[models/Payment.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/Payment.js)**: Logs customer payments. Stores plan references, purchase amounts in INR, payment status (`Succeeded`, `Failed`), refund statuses (`None`, `Partial`, `Full`), and Stripe payment intent IDs.
-- **[models/WebhookLog.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/WebhookLog.js)**: Audits received Stripe Webhook event IDs to ensure idempotent, single-execution processing of payments and avoid duplicate splits.
-- **[models/RevenueSettings.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/RevenueSettings.js)**: Stores global split modes (`Equal` or `Percentage`) and configuration variables like the Owner's target percentage.
-- **[models/RevenueDistribution.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/RevenueDistribution.js)**: The ledger for wallet changes. Stores distribution amount, split mode, split percentages, transaction type (`Distribution` or `RefundReversal`), and an array of user splits detailing who received what amount.
-- **[models/Refund.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/Refund.js)**: Logs active refunds. Tracks the parent payment, Stripe Refund ID, refund amount, type (`Full` or `Partial`), refund reason, status (`succeeded`, `failed`, `pending`), and the affected employees.
-- **[models/RefundTransactionLog.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/RefundTransactionLog.js)**: Stores granular records auditing individual wallet reversal subtractions (type `'OwnerReversal'` or `'EmployeeReversal'`).
+- **[models/User.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/User.js)**: Defines the User schema. Stores credentials, role (`User`, `Employee`, `Owner`, `Admin`), current wallet balance, and active subscription details. Also includes cron-specific flags: `expiresAt` (Date), `subscriptionStatus` (String), `isPremium` (Boolean), and `reminderSent` (Boolean).
+- **[models/Plan.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/Plan.js)**: Defines subscription plans. Stores monthly and yearly prices in USD.
+- **[models/Payment.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/Payment.js)**: Logs customer payments. Stores amounts in INR, payment status (`Succeeded`, `Failed`), refund status, and Stripe Payment Intent IDs.
+- **[models/WebhookLog.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/WebhookLog.js)**: Logs webhook request IDs to prevent duplicate split execution.
+- **[models/RevenueSettings.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/RevenueSettings.js)**: Configures global splits settings (Equal vs Percentage Split modes).
+- **[models/RevenueDistribution.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/RevenueDistribution.js)**: The wallet transaction ledger. Records distributions or refund reversals.
+- **[models/Refund.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/Refund.js)**: Tracks parent payment reference, Stripe Refund ID, refund amount, status, and affected employees.
+- **[models/RefundTransactionLog.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/RefundTransactionLog.js)**: Logs reversal subtractions from wallets to guarantee database consistency.
+- **[models/DailyAnalytics.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/models/DailyAnalytics.js) [NEW]**: Logs aggregated daily metrics (successful payment totals, refunds, net revenue, active premium user counts) for date-based history tracking.
 
-#### Middleware Layer (`/backend/middleware`)
-- **[middleware/authMiddleware.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/middleware/authMiddleware.js)**: Implements authentication protection. Pulls JWT tokens from HTTP-only cookies, decrypts them, and verifies roles before routing traffic.
-- **[middleware/asyncHandler.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/middleware/asyncHandler.js)**: Express wrapper that catches uncaught exceptions inside routes and forwards them to the global error middleware to avoid server crashes.
-- **[middleware/errorHandler.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/middleware/errorHandler.js)**: Central error formatter. Maps Mongoose validation issues, duplicate keys, and authorization errors to clear client-facing JSON.
-- **[middleware/validation.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/middleware/validation.js)**: Formulates inputs validation gates (like checking emails are formatted correctly, password lengths, etc.) using `express-validator`.
+#### Background Cron Jobs scheduler (`/backend/cron`)
+- **[cron/expireSubscriptions.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/cron/expireSubscriptions.js) [NEW]**: Finds users whose `expiresAt` has passed and sets their subscriptionStatus to `Expired` and `isPremium` to `false`.
+- **[cron/dailyAnalytics.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/cron/dailyAnalytics.js) [NEW]**: Compiles and records payments, refunds, and active user metrics for the previous calendar day, saving logs in `DailyAnalytics`.
+- **[cron/sendExpiryReminders.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/cron/sendExpiryReminders.js) [NEW]**: Dispatches warning alerts via email using nodemailer to accounts scheduled to expire within the next 3 days.
+- **[cron/index.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/cron/index.js) [NEW]**: Coordinates and schedules the cron tasks using standard cron intervals, enforcing the `ENABLE_CRON` env variable check.
 
-#### Business Logic Services (`/backend/services`)
-- **[services/authService.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/services/authService.js)**: Manages authentication. Implements user signups, credentials validation, and security tokens creation.
-- **[services/userService.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/services/userService.js)**: Accesses user details, lists employees, and reads custom wallet parameters.
-- **[services/planService.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/services/planService.js)**: Manages subscription plan CRUD operations.
-- **[services/paymentService.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/services/paymentService.js)**: Orchestrates checkout payments:
-  - `generatePaymentIntent`: Calculates USD conversion to INR paise (1 USD = 80 INR) and returns the Stripe checkout client secret.
-  - `processWebhookEvent`: Decodes checked Stripe signatures, registers payment records, and executes splits. Listens to `charge.refunded` and `refund.updated` events, processing wallet reversals *only* if Stripe refund status is `'succeeded'`.
-  - `queryPaymentHistory`: Paginated list retrieval. Admins and Owners can fetch all records; Customers can only fetch their own.
-- **[services/revenueService.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/services/revenueService.js)**: The revenue sharing calculator:
-  - `calculateAndDistribute`: Dynamically splits invoice sums according to split modes, updates user wallets, and logs splits.
-  - `reverseDistribution`: Scales wallet subtractions proportionally during refunds using transactional sessions to prevent math corruption. Logs entries in `RefundTransactionLog`.
-  - `getWalletStats`: Computes total available balances, history lists, and returns role-based lifetime revenue (Owner sees gross earnings before refunds, Employee sees net earnings).
+#### System Utilities
+- **[utils/sendEmail.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/backend/utils/sendEmail.js) [NEW]**: Helper service that reads SMTP configurations from the environment and dispatches transactional emails.
 
 #### Controllers and Routers (`/backend/controllers` & `/backend/routes`)
-- **Controllers** handle HTTP parameters mapping, calling business functions inside `services`, and outputting JSON:
-  - `authController.js` / `authRoutes.js`
-  - `userController.js` / `userRoutes.js`
-  - `planController.js` / `planRoutes.js`
-  - `paymentController.js` / `paymentRoutes.js`
-  - `revenueController.js` / `revenueRoutes.js`
-  - `refundController.js` / `refundRoutes.js` (Manages refund validation checks: duplicate request filters, Stripe status validation, and transactional MongoDB commits).
+- **`authController.js` / `authRoutes.js`**: Signup, Login, Profile loading, and JWT session handling.
+- **`userController.js` / `userRoutes.js`**: User listings, role updates, and the secure admin trigger endpoint `POST /api/users/cron/trigger` to manually execute schedulers.
+- **`planController.js` / `planRoutes.js`**: Subscription plan modifications.
+- **`paymentController.js` / `paymentRoutes.js`**: Checkout intents, webhook reception, and history listings.
+- **`revenueController.js` / `revenueRoutes.js`**: Splits configurations, configuration changes, and active wallet balance summaries.
+- **`refundController.js` / `refundRoutes.js`**: Audits, initiates, and reverses Stripe payment distributions.
 
 ---
 
-## frontend React Codebase (`/frontend/src`)
+### 2. Frontend React Codebase (`/frontend/src`)
 
 #### Boot Mounts
-- **[main.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/main.jsx)**: Starts the React Virtual DOM, loads base styles, and wraps the tree.
-- **[App.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/App.jsx)**: Lists router setups. Enforces login and checks role access levels using ProtectedRoute wrappers.
-- **[index.css](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/index.css)**: Implements base Tailwind configuration.
+- **[main.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/main.jsx)**: Bootstraps the React DOM and attaches root elements.
+- **[App.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/App.jsx)**: Registers react routes, applying `ProtectedRoute` gates to keep workspace directories safe.
+- **[index.css](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/index.css)**: Implements base Tailwind utility styles.
 
-#### Shared Modules (`/frontend/src/components` & `/frontend/src/context`)
-- **[context/AuthContext.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/context/AuthContext.jsx)**: Stores active user information and session login state, providing auth properties universally to React nodes.
-- **[services/api.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/services/api.js)**: Configures Axios instances, routing requests automatically to `http://localhost:5000/api` with credentials setup.
-- **[components/Navbar.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/components/Navbar.jsx)**: Implements the premium navigation bar, adapting menu options based on roles.
-- **[components/ProtectedRoute.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/components/ProtectedRoute.jsx)**: Blocks navigation, redirecting unauthenticated users to `/login`.
-- **[components/CheckoutForm.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/components/CheckoutForm.jsx)**: Embedded Stripe payment input form handling credit card logic.
+#### Shared Services & Contexts
+- **[context/AuthContext.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/context/AuthContext.jsx)**: Global provider wrapping user authorization states.
+- **[services/api.js](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/services/api.js)**: Axios configuration. Dynamically detects if the application is running locally (`localhost`) and automatically redirects requests to `http://localhost:5000/api`, falling back to Render production endpoints otherwise.
+
+#### Components
+- **[components/Navbar.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/components/Navbar.jsx)**: Global navigation bar. Features a collapsible slide-in drawer sidebar on mobile screens with backdrop overlays.
+- **[components/CheckoutForm.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/components/CheckoutForm.jsx)**: Embedded Stripe card fields form handling billing submissions.
 
 #### React Pages (`/frontend/src/pages`)
-- **[pages/Login.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/Login.jsx)** / **[pages/Signup.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/Signup.jsx)**: Form pages handling credentials submission.
-- **[pages/Profile.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/Profile.jsx)**: Renders user profile information, payment plans, and subscription states.
-- **[pages/Checkout.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/Checkout.jsx)**: Loads Stripe Elements contexts dynamically to authorize new payment intents.
-- **[pages/ManagePlans.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/ManagePlans.jsx)**: CRUD interface allowing Admins to edit subscription plans.
-- **[pages/AdminDashboard.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/AdminDashboard.jsx)**: Dashboard showing analytical charts, subscription statistics, and active users counts.
-- **[pages/RevenueDashboard.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/RevenueDashboard.jsx)**: Displays available balance cards, lifetime earnings, and transaction lists:
-  - Owners configure Equal vs Percentage splits settings.
-  - Employees view their split allocations.
-  - Both view audit logs of **Refund Reversal Wallet Logs** displaying refund deduction details.
-- **[pages/RefundsManagement.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/RefundsManagement.jsx)**: Owner workspace for issuing refunds:
-  - Statistics cards displaying total refunded values, count logs, and in-flight states.
-  - Filters to search by date, amount, user, or status.
-  - Modal workflows to initiate full/partial refunds and view estimated wallet split reversals before confirming.
-- **[pages/PaymentsList.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/PaymentsList.jsx)**: Lists general billing history. Clicking on any entry redirects the user to details.
-- **[pages/PaymentDetails.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/PaymentDetails.jsx)**: Comprehensive receipt:
-  - Displays original payment plan, charge amount, customer metadata.
-  - Shows original revenue split distributions breakdown.
-  - Displays prominent warnings showing remaining refundable balance if the invoice is partially refunded.
-  - Shows refund logs containing Stripe Refund IDs and reason details.
+- **[pages/Login.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/Login.jsx) / [pages/Signup.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/Signup.jsx)**: Credentials forms wrapped in responsive page margins.
+- **[pages/AdminPanel.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/AdminPanel.jsx)**: User administration center. Converts table elements to stacked layout cards on mobile. Includes the **System Cron Scheduler Controls** dashboard panel to run cron tasks instantly.
+- **[pages/AdminDashboard.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/AdminDashboard.jsx)**: Displays graphs and charts with scrolling overflow containers.
+- **[pages/ManagePlans.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/ManagePlans.jsx)**: Subscription plan editors wrapped in responsive modals.
+- **[pages/PaymentsList.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/PaymentsList.jsx)**: Transaction logs converting to stacked cards on narrow mobile viewports.
+- **[pages/PaymentDetails.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/PaymentDetails.jsx)**: Details receipt displaying revenue splits, remaining refundable balances, and refund audit details.
+- **[pages/RefundsManagement.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/RefundsManagement.jsx)**: Platform refund manager showing refund statistics cards and request trigger forms.
+- **[pages/RevenueDashboard.jsx](file:///c:/Users/Asus/OneDrive/Desktop/StripeGateway/frontend/src/pages/RevenueDashboard.jsx)**: Shows available wallet balances and wallet change history logs.
