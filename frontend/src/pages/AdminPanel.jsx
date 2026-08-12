@@ -9,6 +9,12 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const { user: currentUser } = useContext(AuthContext);
   const [cronLoading, setCronLoading] = useState(false);
+  const [lastRun, setLastRun] = useState({
+    expire: null,
+    analytics: null,
+    reminders: null,
+    all: null
+  });
 
   const handleTriggerCron = async (jobType) => {
     try {
@@ -17,6 +23,9 @@ const AdminPanel = () => {
       const res = await api.post('/users/cron/trigger', payload);
       
       if (res.data.success) {
+        const timeStr = res.data.executedAt || new Date().toLocaleTimeString();
+        setLastRun((prev) => ({ ...prev, [jobType]: timeStr }));
+
         let detailsMsg = '';
         if (jobType === 'expire') {
           detailsMsg = ` (Expired: ${res.data.result?.expiredCount ?? 0} subscriptions)`;
@@ -107,34 +116,57 @@ const AdminPanel = () => {
             Manually trigger background sync tasks. The results will propagate live to your Mongo database.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button
-              onClick={() => handleTriggerCron('expire')}
-              disabled={cronLoading}
-              className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
-            >
-              <span>Expire Subscriptions</span>
-            </button>
-            <button
-              onClick={() => handleTriggerCron('analytics')}
-              disabled={cronLoading}
-              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
-            >
-              <span>Compile Daily Analytics</span>
-            </button>
-            <button
-              onClick={() => handleTriggerCron('reminders')}
-              disabled={cronLoading}
-              className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
-            >
-              <span>Send Expiry Reminders</span>
-            </button>
-            <button
-              onClick={() => handleTriggerCron('all')}
-              disabled={cronLoading}
-              className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
-            >
-              <span>Run All Jobs</span>
-            </button>
+            <div className="flex flex-col items-center gap-1.5 w-full">
+              <button
+                onClick={() => handleTriggerCron('expire')}
+                disabled={cronLoading}
+                className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>Expire Subscriptions</span>
+              </button>
+              {lastRun.expire && (
+                <span className="text-[10px] text-indigo-400 font-semibold font-mono animate-fade-in">Last Run: {lastRun.expire}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center gap-1.5 w-full">
+              <button
+                onClick={() => handleTriggerCron('analytics')}
+                disabled={cronLoading}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>Compile Daily Analytics</span>
+              </button>
+              {lastRun.analytics && (
+                <span className="text-[10px] text-emerald-400 font-semibold font-mono animate-fade-in">Last Run: {lastRun.analytics}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center gap-1.5 w-full">
+              <button
+                onClick={() => handleTriggerCron('reminders')}
+                disabled={cronLoading}
+                className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>Send Expiry Reminders</span>
+              </button>
+              {lastRun.reminders && (
+                <span className="text-[10px] text-amber-400 font-semibold font-mono animate-fade-in">Last Run: {lastRun.reminders}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center gap-1.5 w-full">
+              <button
+                onClick={() => handleTriggerCron('all')}
+                disabled={cronLoading}
+                className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>Run All Jobs</span>
+              </button>
+              {lastRun.all && (
+                <span className="text-[10px] text-slate-400 font-semibold font-mono animate-fade-in">Last Run: {lastRun.all}</span>
+              )}
+            </div>
           </div>
         </div>
 

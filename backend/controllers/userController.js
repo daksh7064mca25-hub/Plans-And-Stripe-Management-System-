@@ -66,6 +66,7 @@ const triggerCronJobs = asyncHandler(async (req, res, next) => {
   res.json({
     success: true,
     message: `Cron job(s) executed successfully`,
+    executedAt: new Date().toLocaleTimeString(),
     result,
   });
 });
